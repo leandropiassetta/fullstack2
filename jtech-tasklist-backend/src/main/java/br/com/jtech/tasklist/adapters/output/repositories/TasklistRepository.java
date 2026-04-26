@@ -1,29 +1,36 @@
-/*
-*  @(#)TasklistRepository.java
-*
-*  Copyright (c) J-Tech Solucoes em Informatica.
-*  All Rights Reserved.
-*
-*  This software is the confidential and proprietary information of J-Tech.
-*  ("Confidential Information"). You shall not disclose such Confidential
-*  Information and shall use it only in accordance with the terms of the
-*  license agreement you entered into with J-Tech.
-*
-*/
 package br.com.jtech.tasklist.adapters.output.repositories;
 
-import org.springframework.stereotype.Repository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import br.com.jtech.tasklist.adapters.output.repositories.entities.TasklistEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
-/**
-* class TasklistRepository 
-* 
-* @author angelo.vicente
-*/
 @Repository
 public interface TasklistRepository extends JpaRepository<TasklistEntity, UUID> {
-    
+
+    List<TasklistEntity> findAllByOwnerIdOrderByNameAsc(UUID ownerId);
+
+    @Query("""
+            select count(t) > 0
+            from TasklistEntity t
+            where t.owner.id = :ownerId
+              and lower(trim(t.name)) = lower(trim(:name))
+            """)
+    boolean existsByOwnerIdAndNormalizedName(@Param("ownerId") UUID ownerId, @Param("name") String name);
+
+    @Query("""
+            select count(t) > 0
+            from TasklistEntity t
+            where t.owner.id = :ownerId
+              and lower(trim(t.name)) = lower(trim(:name))
+              and t.id <> :tasklistId
+            """)
+    boolean existsByOwnerIdAndNormalizedNameAndIdNot(@Param("ownerId") UUID ownerId,
+                                                     @Param("name") String name,
+                                                     @Param("tasklistId") UUID tasklistId);
+
 }

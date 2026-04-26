@@ -1,30 +1,11 @@
-/*
-*  @(#)Tasklist.java
-*
-*  Copyright (c) J-Tech Solucoes em Informatica.
-*  All Rights Reserved.
-*
-*  This software is the confidential and proprietary information of J-Tech.
-*  ("Confidential Information"). You shall not disclose such Confidential
-*  Information and shall use it only in accordance with the terms of the
-*  license agreement you entered into with J-Tech.
-*
-*/
 package br.com.jtech.tasklist.application.core.domains;
 
 import br.com.jtech.tasklist.adapters.input.protocols.TasklistRequest;
 import br.com.jtech.tasklist.adapters.output.repositories.entities.TasklistEntity;
 import lombok.*;
 
-import java.util.UUID;
 import java.util.List;
 
-
-/**
-* class Tasklist 
-* 
-* user angelo.vicente 
-*/
 @Getter
 @Setter
 @Builder
@@ -34,26 +15,43 @@ import java.util.List;
 public class Tasklist {
 
     private String id;
+    private String name;
+    private String ownerId;
 
     public static List<Tasklist> of(List<TasklistEntity> entities) {
         return entities.stream().map(Tasklist::of).toList();
-     }
-
-    public TasklistEntity toEntity() {
-        return TasklistEntity.builder()
-            .id(UUID.fromString(getId()))
-            .build();
-     }
+    }
 
     public static Tasklist of(TasklistEntity entity) {
         return Tasklist.builder()
-            .id(entity.getId().toString())
-            .build();
-     }
+                .id(entity.getId().toString())
+                .name(entity.getName())
+                .ownerId(entity.getOwner().getId().toString())
+                .build();
+    }
 
     public static Tasklist of(TasklistRequest request) {
+        String normalizedName = normalizeName(request.getName());
         return Tasklist.builder()
-            .id(request.getId())
-            .build();
-     }
- }
+                .name(normalizedName)
+                .build();
+    }
+
+    public boolean belongsTo(String userId) {
+        return this.ownerId != null && this.ownerId.equals(userId);
+    }
+
+    public static String normalizeName(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Name must not be null");
+        }
+
+        String normalizedValue = value.trim();
+        if (normalizedValue.isBlank()) {
+            throw new IllegalArgumentException("Name must not be blank");
+        }
+
+        return normalizedValue;
+    }
+
+}

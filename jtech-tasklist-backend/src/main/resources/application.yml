@@ -4,25 +4,31 @@ spring:
     version: 1.0.0-SNAPSHOT
   profiles:
     active: ${PROFILE:dev}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
   datasource:
     driverClassName: org.postgresql.Driver
-    url: 
-      jdbc:postgresql://${DS_URL:localhost}:${DS_PORT:5432}/${DS_DATABASE:sansys_database}
+    url: jdbc:postgresql://${DS_URL:localhost}:${DS_PORT:5432}/${DS_DATABASE:tasklist}
     password: ${DS_PASS:postgres}
     username: ${DS_USER:postgres}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: 'true'
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     generate-ddl: 'false'
+jwt:
+  secret: ${JWT_SECRET:3c4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e}
+  expiration: 86400000
+  refresh-expiration: 604800000
 management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health,info
 server:
-  port: ${PORT:0}
+  port: ${PORT:8080}
   forward-headers-strategy: framework
 logging:
   level:

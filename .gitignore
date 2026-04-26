@@ -1,0 +1,26 @@
+.DS_Store
+
+# Git metadata should never go into delivery archives
+.git/
+
+# Common build and dependency artifacts
+node_modules/
+dist/
+build/
+.gradle/
+logs/
+coverage/
+
+# IDE/editor files
+.idea/
+.vscode/
+
+# OS / local temp files
+*.log
+*.tmp
+*.swp
+
+# Local environment files
+.env
+.env.*
+!.env.example

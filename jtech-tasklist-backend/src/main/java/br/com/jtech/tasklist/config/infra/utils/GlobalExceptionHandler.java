@@ -1,17 +1,4 @@
-/*
- * @(#)GlobalExceptionHandler.java
- *
- * Copyright (c) J-Tech Solucoes em Informatica.
- * All Rights Reserved.
- *
- * This software is the confidential and proprietary information of J-Tech.
- * ("Confidential Information"). You shall not disclose such Confidential
- * Information and shall use it only in accordance with the terms of the
- * license agreement you entered into with J-Tech.
- */
-package br.com.jtech.tasklist.config.infra.handlers;
-
-
+package br.com.jtech.tasklist.config.infra.utils;
 
 import br.com.jtech.tasklist.config.infra.exceptions.*;
 import org.springframework.http.HttpStatus;
@@ -25,21 +12,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Create a global exception handler for intercepting all exceptions in the api.
- *
- * @author angelo.vicente
- * class GlobalExceptionHandler
- **/
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * This method handles spring validations.
-     *
-     * @param ex Exception thrown.
-     * @return Return a {@link ApiError} with an array of errors.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationErrors(MethodArgumentNotValidException ex) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST);
@@ -50,17 +25,78 @@ public class GlobalExceptionHandler {
         return buildResponseEntity(error);
     }
 
+    @ExceptionHandler({TasklistNotFoundException.class, TaskNotFoundException.class,
+            UserNotFoundException.class, RefreshTokenNotFoundException.class})
+    public ResponseEntity<ApiError> handleNotFound(RuntimeException ex) {
+        ApiError error = new ApiError(HttpStatus.NOT_FOUND);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleConflict(UserAlreadyExistsException ex) {
+        ApiError error = new ApiError(HttpStatus.CONFLICT);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler({TasklistAlreadyExistsException.class, TaskAlreadyExistsException.class})
+    public ResponseEntity<ApiError> handleTasklistConflict(RuntimeException ex) {
+        ApiError error = new ApiError(HttpStatus.CONFLICT);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiError> handleUnauthorized(UnauthorizedException ex) {
+        ApiError error = new ApiError(HttpStatus.UNAUTHORIZED);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException ex) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(ForbiddenException ex) {
+        ApiError error = new ApiError(HttpStatus.FORBIDDEN);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
+        ApiError error = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        error.setMessage("Unexpected error");
+        error.setDebugMessage(ex.getLocalizedMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
     private ResponseEntity<ApiError> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError, apiError.getStatus());
     }
 
-
     private List<ApiSubError> subErrors(MethodArgumentNotValidException ex) {
         List<ApiSubError> errors = new ArrayList<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            ApiValidationError api = new ApiValidationError(ex.getObjectName(), fieldError.getField(), fieldError.getRejectedValue(), fieldError.getDefaultMessage());
+            ApiValidationError api = new ApiValidationError(
+                    ex.getObjectName(),
+                    fieldError.getField(),
+                    fieldError.getRejectedValue(),
+                    fieldError.getDefaultMessage()
+            );
             errors.add(api);
-
         }
         return errors;
     }
